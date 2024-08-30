@@ -13,6 +13,7 @@ type ProductType = {
   value: number
 }
 
+//TODO: add a way to edit the number of stock and maybe price
 function Product({ product }: { product: ProductType }) {
   return (
     <ThemedView style={[styles.stepContainer, { flexDirection: 'row' }]}>
@@ -81,7 +82,7 @@ export default function Products() {
             variant='primary'
             onPress={async () => {
               await db.runAsync(
-                'INSERT INTO products (name, stock, value) VALUES (?, ?,?)',
+                'INSERT INTO products (name, stock, value) VALUES (?,?,?)',
                 name,
                 Math.floor(Number(stock)),
                 Math.floor(Number(value) * 1000)
