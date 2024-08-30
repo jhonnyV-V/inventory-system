@@ -22,7 +22,8 @@ export async function migrate(db: SQLiteDatabase) {
         CREATE TABLE IF NOT EXISTS products(
           id         INTEGER PRIMARY KEY NOT NULL,
           stock      INTEGER NOT NULL,
-          value      INTEGER NOT NULL
+          value      INTEGER NOT NULL,
+          name       TEXT NOT NULL
         );
       `);
       console.log("create products table");

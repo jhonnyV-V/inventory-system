@@ -1,21 +1,26 @@
 import { StyleSheet, View, Pressable, GestureResponderEvent } from 'react-native';
 import { ThemedText } from './ThemedText';
+import { useThemeColor } from '@/hooks/useThemeColor';
 
 type ButtonProps = {
   label: string,
-  theme: string,
+  variant?: 'primary' | string,
+  lightColor?: string;
+  darkColor?: string;
   onPress: ((event: GestureResponderEvent) => void) | null | undefined,
 }
 
-export default function Button({ label, theme, onPress }: ButtonProps) {
+export default function Button({ label, variant, lightColor, darkColor, onPress }: ButtonProps) {
+  const backgroundColor = useThemeColor({ light: lightColor || "#717BB3", dark: darkColor || "#fff" }, 'background');
 
-  if (theme === 'primary') {
+  if (variant === 'primary') {
     return (
-      <View>
+      <View style={[styles.buttonContainer]}>
         <Pressable
+          style={[{ backgroundColor }, styles.button]}
           onPress={onPress}
         >
-          <ThemedText>{label}</ThemedText>
+          <ThemedText style={[styles.buttonLabel]} >{label}</ThemedText>
         </Pressable>
       </View>
     );
@@ -42,18 +47,19 @@ const styles = StyleSheet.create({
     padding: 3,
   },
   button: {
-    borderRadius: 10,
+    borderRadius: 18,
     width: '100%',
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
+    borderColor: '#0000',
+    borderStyle: 'solid',
   },
   buttonIcon: {
     paddingRight: 8,
   },
   buttonLabel: {
-    color: '#fff',
     fontSize: 16,
   },
 });
