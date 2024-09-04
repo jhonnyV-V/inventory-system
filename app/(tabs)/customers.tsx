@@ -6,10 +6,7 @@ import Button from '@/components/Button';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
 
-type Customer = {
-  id: number
-  name: string
-}
+import type { Customer } from '@/hooks/useDb';
 
 function Customer({ customer }: { customer: Customer }) {
   return (

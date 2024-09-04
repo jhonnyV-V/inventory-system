@@ -1,70 +1,411 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import { StyleSheet, TextInput } from 'react-native';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
+import { useSQLiteContext } from 'expo-sqlite';
+import { useEffect, useState } from 'react';
+import CheckBox from 'react-native-bouncy-checkbox';
+
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import Button from '@/components/Button';
 
-export default function HomeScreen() {
+import type { Customer, Product, Sell, SellProduct } from '@/hooks/useDb';
+import { Collapsible } from '@/components/Collapsible';
+
+
+type modalType = 'sell' | 'payment' | 'none'
+type Props = {
+  setModal: React.Dispatch<
+    React.SetStateAction<modalType>
+  >,
+};
+
+type CustomerProps = {
+  customer: Customer,
+  isSelected: boolean,
+  displayButton: boolean,
+  select: React.Dispatch<React.SetStateAction<Customer | undefined>>,
+}
+
+function Customer({ customer, isSelected, displayButton = true, select }: CustomerProps) {
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <ThemedView style={styles.customerContainer}>
+      <ThemedText>{customer.name}</ThemedText>
+      {isSelected && (
+        <Button
+          label='deseleccionar'
+          variant='primary'
+          onPress={() => select(undefined)}
+          containerStyles={styles.button}
         />
-      }>
+      )}
+      {!isSelected && displayButton && (
+        <Button
+          label='seleccionar'
+          variant='primary'
+          onPress={() => select(customer)}
+          containerStyles={styles.button}
+        />
+      )}
+    </ThemedView>
+  );
+}
+
+type ProductProps = {
+  product: Product,
+  isSelected: boolean,
+  select: React.Dispatch<React.SetStateAction<Product[]>>,
+  productToQuantity: React.Dispatch<React.SetStateAction<{ [key: number]: number }>>,
+}
+
+function Product({ product, isSelected, select, productToQuantity }: ProductProps) {
+
+  return (
+    <ThemedView style={{ marginBottom: 15 }}>
+      <ThemedView style={styles.productContainer}>
+        <ThemedText>{product.name}</ThemedText>
+        {isSelected && (
+          <Button
+            label='deseleccionar'
+            variant='primary'
+            onPress={() => {
+              select((products) => products.filter((p) => p.id !== product.id));
+              productToQuantity((maping) => {
+                delete maping[product.id];
+                return maping;
+              });
+            }}
+            containerStyles={styles.button}
+          />
+        )}
+        {!isSelected && (
+          <Button
+            label='seleccionar'
+            variant='primary'
+            onPress={() => {
+              select((products) => [...products, product]);
+              productToQuantity((maping) => {
+                maping[product.id] = 1;
+                return maping;
+              });
+            }}
+            containerStyles={styles.button}
+          />
+        )}
+      </ThemedView>
+      {isSelected && (
+        <TextInput
+          style={styles.input}
+          onChangeText={(v) => {
+            if (Number(v) > 0) {
+              productToQuantity((maping) => {
+                maping[product.id] = Number(v);
+                return maping;
+              });
+            }
+          }}
+          defaultValue='1'
+          keyboardType='numeric'
+          inputMode='numeric'
+        />
+      )}
+    </ThemedView>
+  );
+}
+
+function Sell({ setModal }: Props) {
+  const db = useSQLiteContext();
+  const [customers, setCustomers] = useState<Customer[]>([{ id: 1, name: 'Anonimo' }]);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer>();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
+  const [productToQuantity, setProductToQuantity] = useState<{ [key: number]: number }>({});
+  const [cUsd, setCUsd] = useState(false);
+  const [cBs, setCBs] = useState(true);
+  const [pmCash, setPmCash] = useState(false);
+  const [pmTransfer, setPmTransfer] = useState(true);
+  const [amount, setAmount] = useState('0');
+
+  useEffect(() => {
+    async function getCustomers() {
+      const data: Customer[] = await db.getAllAsync('SELECT * FROM customers');
+      setCustomers(data);
+    }
+    getCustomers()
+  }, [])
+
+  useEffect(() => {
+    async function getProducts() {
+      const data: Product[] = await db.getAllAsync('SELECT * FROM products');
+      setProducts(data);
+    }
+    getProducts()
+  }, [])
+
+  return (
+    <>
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
+        <ThemedText type="title">Registrar Venta</ThemedText>
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({ ios: 'cmd + d', android: 'cmd + m' })}
-          </ThemedText>{' '}
-          to open developer tools.
+      <ThemedView style={{ marginTop: 10 }}>
+        <Collapsible title='Selecciona un cliente (opcional)'>
+          {customers.map((customer) => (
+            <Customer
+              key={customer.id}
+              customer={customer}
+              isSelected={customer.id === selectedCustomer?.id}
+              displayButton={!selectedCustomer}
+              select={setSelectedCustomer}
+            />
+          ))}
+        </Collapsible>
+      </ThemedView >
+      <ThemedView style={{ marginTop: 10 }}>
+        <Collapsible title='Selecciona un/os producto/s'>
+          {products.map((product) => (
+            <Product
+              key={product.id}
+              product={product}
+              isSelected={selectedProducts.findIndex((p) => product.id === p.id) !== -1}
+              select={setSelectedProducts}
+              productToQuantity={setProductToQuantity}
+            />
+          ))}
+        </Collapsible>
+      </ThemedView >
+      <ThemedView style={{ marginTop: 10 }}>
+        <ThemedText type='subtitle'>
+          Moneda del pago (opcional)
         </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
+
+        <ThemedView style={{ flexDirection: 'row' }}>
+          <CheckBox
+            isChecked={cUsd}
+            useBuiltInState={false}
+            onPress={(newValue) => {
+              setCUsd(!newValue)
+              setCBs(newValue)
+            }}
+          />
+          <ThemedText type='default'>
+            Dolares
+          </ThemedText>
+        </ThemedView >
+
+        <ThemedView style={{ flexDirection: 'row' }}>
+          <CheckBox
+            useBuiltInState={false}
+            isChecked={cBs}
+            onPress={(newValue) => {
+              setCBs(!newValue)
+              setCUsd(newValue)
+            }}
+          />
+          <ThemedText type='default'>
+            Bolivares
+          </ThemedText>
+        </ThemedView >
+
+      </ThemedView >
+
+      {cBs && (
+        <ThemedView style={{ marginTop: 10 }}>
+          <ThemedText type='subtitle'>
+            Metodo de pago (opcional)
+          </ThemedText>
+
+          <ThemedView style={{ flexDirection: 'row' }}>
+            <CheckBox
+              isChecked={pmCash}
+              useBuiltInState={false}
+              onPress={(newValue) => {
+                setPmCash(!newValue)
+                setPmTransfer(newValue)
+              }}
+            />
+            <ThemedText type='default'>
+              Efectivo
+            </ThemedText>
+          </ThemedView >
+
+          <ThemedView style={{ flexDirection: 'row' }}>
+            <CheckBox
+              useBuiltInState={false}
+              isChecked={pmTransfer}
+              onPress={(newValue) => {
+                setPmTransfer(!newValue)
+                setPmCash(newValue)
+              }}
+            />
+            <ThemedText type='default'>
+              Transferencia
+            </ThemedText>
+          </ThemedView >
+
+        </ThemedView >
+      )}
+
+      <ThemedView style={{ marginTop: 10 }}>
+        <ThemedText type='subtitle'>
+          Monto Pagado (opcional)
         </ThemedText>
+        <TextInput
+          style={styles.input}
+          value={amount}
+          onChangeText={(v) => setAmount(v)}
+          keyboardType='numeric'
+          inputMode='numeric'
+        />
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
+
+      <ThemedView style={{ marginTop: 40 }}>
+        <Button
+          label='registar venta'
+          variant='primary'
+          onPress={async () => {
+            let amountpaid = Number(amount);
+            if (amountpaid > 0) {
+              if (cUsd) {
+                amountpaid = amountpaid * 1000;
+              } else {
+                amountpaid = Math.floor(amountpaid / 37);
+                amountpaid = amountpaid * 1000;
+              }
+            }
+
+            const SellExample: Sell = {
+              id: 1,
+              createdAt: '',
+              customer_id: 1,
+              payment_method: 'cash',
+              currency: 'dolars',
+              amount_paid: 1.27 * 1000
+            };
+
+            await db.runAsync(
+              'INSERT INTO sells (customer_id, payment_method, currency, amount_paid) VALUES (?, ?, ?, ?)',
+              selectedCustomer?.id || 1,
+              pmTransfer ? 'transfer' : 'cash',
+              cUsd ? 'dolars' : 'bolivares',
+              amountpaid,
+            );
+
+            const count = (await db.getFirstAsync<number>('SELECT COUNT(*) FROM sells')) ?? 1;
+
+            const ExampleProducts: SellProduct[] = [{
+              id: 1,
+              units: 1,
+              sell_id: 1,
+              product_id: 1
+            }];
+
+            for (const product of selectedProducts) {
+              const units = productToQuantity[product.id];
+              await db.runAsync(
+                'INSERT INTO sells_products (units, sell_id, product_id) VALUES (?,?,?)',
+                units,
+                count,
+                product.id,
+              );
+
+              await db.runAsync(
+                'UPDATE products SET stock=? WHERE id=?',
+                product.stock - units,
+                product.id
+              );
+            }
+
+            alert("Venta Registrada");
+
+            setModal('none')
+          }}
+        />
+      </ThemedView >
+
+    </>
+  );
+}
+
+function Payment({ setModal }: Props) {
+  const db = useSQLiteContext();
+  return (
+    <>
+      <ThemedView style={styles.titleContainer}>
+        <ThemedText type="title">Registrar Pago</ThemedText>
       </ThemedView>
-    </ParallaxScrollView>
+      <ThemedView style={{ marginTop: 10 }}>
+        <Button
+          label='registar pago'
+          variant='primary'
+          onPress={() => setModal('none')}
+        />
+      </ThemedView >
+    </>
+  );
+}
+
+export default function Home() {
+  const [showModal, setShowModal] = useState<modalType>('none');
+
+  return (
+    <ThemedView style={styles.container}>
+      {showModal === 'none' && (
+        <ThemedView style={{ marginTop: 10, gap: 10 }}>
+          <Button
+            label='registrar venta'
+            variant='primary'
+            onPress={() => setShowModal('sell')}
+          />
+          <Button
+            label='registar pago'
+            variant='primary'
+            onPress={() => setShowModal('payment')}
+          />
+        </ThemedView >
+      )}
+
+      {showModal === 'sell' && (
+        <Sell setModal={setShowModal} />
+      )}
+
+      {showModal === 'payment' && (
+        <Payment setModal={setShowModal} />
+      )}
+
+    </ThemedView >
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   titleContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: 8,
   },
   stepContainer: {
     gap: 8,
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  input: {
+    height: 40,
+    margin: 12,
+    padding: 10,
+    borderWidth: 1,
+  },
+  customerContainer: {
+    marginBottom: 8,
+    flexDirection: 'row',
+  },
+  productContainer: {
+    flexDirection: 'row',
+    marginBottom: 4,
+  },
+  button: {
+    height: 30,
+    width: 120,
   },
 });

@@ -1,4 +1,4 @@
-import { StyleSheet, View, Pressable, GestureResponderEvent } from 'react-native';
+import { StyleSheet, View, Pressable, GestureResponderEvent, ViewStyle, StyleProp } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
 
@@ -8,16 +8,18 @@ type ButtonProps = {
   lightColor?: string;
   darkColor?: string;
   onPress: ((event: GestureResponderEvent) => void) | null | undefined,
+  containerStyles?: StyleProp<ViewStyle>,
+  buttonStyles?: StyleProp<ViewStyle>,
 }
 
-export default function Button({ label, variant, lightColor, darkColor, onPress }: ButtonProps) {
+export default function Button({ label, variant, lightColor, darkColor, onPress, containerStyles, buttonStyles }: ButtonProps) {
   const backgroundColor = useThemeColor({ light: lightColor || "#717BB3", dark: darkColor || "#fff" }, 'background');
 
   if (variant === 'primary') {
     return (
-      <View style={[styles.buttonContainer]}>
+      <View style={[styles.buttonContainer, containerStyles]}>
         <Pressable
-          style={[{ backgroundColor }, styles.button]}
+          style={[{ backgroundColor }, styles.button, buttonStyles]}
           onPress={onPress}
         >
           <ThemedText style={[styles.buttonLabel]} >{label}</ThemedText>

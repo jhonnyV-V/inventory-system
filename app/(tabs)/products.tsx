@@ -6,15 +6,10 @@ import Button from '@/components/Button';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
 
-type ProductType = {
-  id: number
-  name: string
-  stock: number
-  value: number
-}
+import type { Product } from '@/hooks/useDb';
 
 //TODO: add a way to edit the number of stock and maybe price
-function Product({ product }: { product: ProductType }) {
+function Product({ product }: { product: Product }) {
   return (
     <ThemedView style={[styles.stepContainer, { flexDirection: 'row' }]}>
       <ThemedText>{product.name}</ThemedText>
@@ -26,14 +21,14 @@ function Product({ product }: { product: ProductType }) {
 
 export default function Products() {
   const db = useSQLiteContext();
-  const [products, setProducts] = useState<ProductType[]>([])
+  const [products, setProducts] = useState<Product[]>([])
   const [showModal, setShowModal] = useState(false);
   const [name, setName] = useState('');
   const [stock, setStock] = useState('');
   const [value, setValue] = useState('');
 
   async function getData() {
-    const data = await db.getAllAsync<ProductType>('SELECT * FROM products');
+    const data = await db.getAllAsync<Product>('SELECT * FROM products');
     setProducts(data);
   }
 

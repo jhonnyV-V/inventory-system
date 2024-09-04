@@ -84,3 +84,40 @@ export async function migrate(db: SQLiteDatabase) {
     return
   }
 }
+
+export type Customer = {
+  id: number
+  name: string
+};
+
+export type Product = {
+  id: number
+  stock: number
+  value: number
+  name: string
+};
+
+export type Sell = {
+  id: number
+  createdAt: string
+  customer_id: number
+  payment_method: 'cash' | 'transfer'
+  amount_paid: number
+  currency: 'bolivares' | 'dolars'
+};
+
+export type SellProduct = {
+  id: number
+  units: number
+  sell_id: number
+  product_id: number
+};
+
+export type Payment = {
+  id: number
+  createdAt: string
+  customer_id: number
+  payment_method: 'cash' | 'transfer'
+  amount_paid: number
+  currency: 'bolivares' | 'dolars'
+};
