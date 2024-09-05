@@ -30,7 +30,7 @@ export default function Customers() {
     const sells = await db.getAllAsync<Sell>('SELECT * FROM sells');
     const payments = await db.getAllAsync<Payment>('SELECT * FROM payments');
     console.log("sells", sells);
-    const test = await db.getAllAsync<SellProduct>('SELECT * FROM sells_products sell_id=?', sells[0].id);
+    const test = await db.getAllAsync<SellProduct>('SELECT * FROM sells_products WHERE sell_id=?', sells[0].id);
     console.log("testing query", test);
     setRegisteredPayments(payments);
   }

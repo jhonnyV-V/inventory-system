@@ -297,7 +297,8 @@ function Sell({ setModal }: Props) {
               amountpaid,
             );
 
-            const count = (await db.getFirstAsync<number>('SELECT COUNT(*) FROM sells')) ?? 1;
+            const count = (await db.getFirstAsync<{ 'COUNT(*)': number }>('SELECT COUNT(*) FROM sells'))?.['COUNT(*)'] || 1;
+            console.log('COUNT', count);
 
             const ExampleProducts: SellProduct[] = [{
               id: 1,
