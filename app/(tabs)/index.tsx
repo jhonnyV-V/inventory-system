@@ -8,7 +8,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import Button from '@/components/Button';
 
-import type { Customer, Product, Sell, SellProduct } from '@/hooks/useDb';
+import type { Customer, Payment, Product, Sell, SellProduct } from '@/hooks/useDb';
 import { Collapsible } from '@/components/Collapsible';
 
 
@@ -131,16 +131,16 @@ function Sell({ setModal }: Props) {
       const data: Customer[] = await db.getAllAsync('SELECT * FROM customers');
       setCustomers(data);
     }
-    getCustomers()
-  }, [])
+    getCustomers();
+  }, []);
 
   useEffect(() => {
     async function getProducts() {
       const data: Product[] = await db.getAllAsync('SELECT * FROM products');
       setProducts(data);
     }
-    getProducts()
-  }, [])
+    getProducts();
+  }, []);
 
   return (
     <>
@@ -282,10 +282,17 @@ function Sell({ setModal }: Props) {
               amount_paid: 1.27 * 1000
             };
 
+            let cashOrTransfer = '';
+            if (cUsd) {
+              cashOrTransfer = 'cash';
+            } else {
+              cashOrTransfer = pmTransfer ? 'transfer' : 'cash';
+            }
+
             await db.runAsync(
               'INSERT INTO sells (customer_id, payment_method, currency, amount_paid) VALUES (?, ?, ?, ?)',
               selectedCustomer?.id || 1,
-              pmTransfer ? 'transfer' : 'cash',
+              cashOrTransfer,
               cUsd ? 'dolars' : 'bolivares',
               amountpaid,
             );
@@ -320,6 +327,13 @@ function Sell({ setModal }: Props) {
             setModal('none')
           }}
         />
+        <Button
+          label='cancelar'
+          variant='primary'
+          onPress={() => {
+            setModal('none')
+          }}
+        />
       </ThemedView >
 
     </>
@@ -328,16 +342,178 @@ function Sell({ setModal }: Props) {
 
 function Payment({ setModal }: Props) {
   const db = useSQLiteContext();
+  const [customers, setCustomers] = useState<Customer[]>([{ id: 1, name: 'Anonimo' }]);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer>();
+  const [cUsd, setCUsd] = useState(false);
+  const [cBs, setCBs] = useState(true);
+  const [pmCash, setPmCash] = useState(false);
+  const [pmTransfer, setPmTransfer] = useState(true);
+  const [amount, setAmount] = useState('0');
+
+  useEffect(() => {
+    async function getCustomers() {
+      const data: Customer[] = await db.getAllAsync('SELECT * FROM customers');
+      setCustomers(data);
+    }
+    getCustomers()
+  }, [])
+
   return (
     <>
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Registrar Pago</ThemedText>
       </ThemedView>
+
+      <ThemedView style={{ marginTop: 10 }}>
+        <Collapsible title='Selecciona un cliente'>
+          {customers.map((customer) => (
+            <Customer
+              key={customer.id}
+              customer={customer}
+              isSelected={customer.id === selectedCustomer?.id}
+              displayButton={!selectedCustomer}
+              select={setSelectedCustomer}
+            />
+          ))}
+        </Collapsible>
+      </ThemedView >
+
+      <ThemedView style={{ marginTop: 10 }}>
+        <ThemedText type='subtitle'>
+          Moneda del pago
+        </ThemedText>
+
+        <ThemedView style={{ flexDirection: 'row' }}>
+          <CheckBox
+            isChecked={cUsd}
+            useBuiltInState={false}
+            onPress={(newValue) => {
+              setCUsd(!newValue)
+              setCBs(newValue)
+            }}
+          />
+          <ThemedText type='default'>
+            Dolares
+          </ThemedText>
+        </ThemedView >
+
+        <ThemedView style={{ flexDirection: 'row' }}>
+          <CheckBox
+            useBuiltInState={false}
+            isChecked={cBs}
+            onPress={(newValue) => {
+              setCBs(!newValue)
+              setCUsd(newValue)
+            }}
+          />
+          <ThemedText type='default'>
+            Bolivares
+          </ThemedText>
+        </ThemedView >
+
+      </ThemedView >
+
+      {cBs && (
+        <ThemedView style={{ marginTop: 10 }}>
+          <ThemedText type='subtitle'>
+            Metodo de pago
+          </ThemedText>
+
+          <ThemedView style={{ flexDirection: 'row' }}>
+            <CheckBox
+              isChecked={pmCash}
+              useBuiltInState={false}
+              onPress={(newValue) => {
+                setPmCash(!newValue)
+                setPmTransfer(newValue)
+              }}
+            />
+            <ThemedText type='default'>
+              Efectivo
+            </ThemedText>
+          </ThemedView >
+
+          <ThemedView style={{ flexDirection: 'row' }}>
+            <CheckBox
+              useBuiltInState={false}
+              isChecked={pmTransfer}
+              onPress={(newValue) => {
+                setPmTransfer(!newValue)
+                setPmCash(newValue)
+              }}
+            />
+            <ThemedText type='default'>
+              Transferencia
+            </ThemedText>
+          </ThemedView >
+
+        </ThemedView >
+      )}
+
+      <ThemedView style={{ marginTop: 10 }}>
+        <ThemedText type='subtitle'>
+          Monto Pagado
+        </ThemedText>
+        <TextInput
+          style={styles.input}
+          value={amount}
+          onChangeText={(v) => setAmount(v)}
+          keyboardType='numeric'
+          inputMode='numeric'
+        />
+      </ThemedView>
+
+
       <ThemedView style={{ marginTop: 10 }}>
         <Button
           label='registar pago'
           variant='primary'
-          onPress={() => setModal('none')}
+          onPress={async () => {
+            let amountpaid = Number(amount);
+            if (amountpaid > 0) {
+              if (cUsd) {
+                amountpaid = amountpaid * 1000;
+              } else {
+                amountpaid = Math.floor(amountpaid / 37);
+                amountpaid = amountpaid * 1000;
+              }
+            }
+
+            const example: Payment = {
+              id: 1,
+              createdAt: '',
+              customer_id: 1,
+              payment_method: 'cash',
+              currency: 'dolars',
+              amount_paid: 0,
+            };
+
+            let cashOrTransfer = '';
+            if (cUsd) {
+              cashOrTransfer = 'cash';
+            } else {
+              cashOrTransfer = pmTransfer ? 'transfer' : 'cash';
+            }
+
+            await db.runAsync(
+              'INSERT INTO payments (customer_id, payment_method, currency, amount_paid) VALUES (?, ?, ?, ?)',
+              selectedCustomer?.id || 1,
+              cashOrTransfer,
+              cUsd ? 'dolars' : 'bolivares',
+              amountpaid,
+            );
+
+            alert("Pago Registrado");
+
+            setModal('none')
+          }}
+        />
+        <Button
+          label='cancelar'
+          variant='primary'
+          onPress={() => {
+            setModal('none')
+          }}
         />
       </ThemedView >
     </>
