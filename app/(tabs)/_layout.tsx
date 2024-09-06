@@ -42,6 +42,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="metrics"
+        options={{
+          title: 'Metricas',
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name={focused ? 'pie-chart' : 'pie-chart-outline'} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="history"
         options={{
           title: 'Historial',
