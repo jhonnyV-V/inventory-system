@@ -22,7 +22,11 @@ export default function Button({ label, variant, lightColor, darkColor, onPress,
           style={[{ backgroundColor }, styles.button, buttonStyles]}
           onPress={onPress}
         >
-          <ThemedText style={[styles.buttonLabel]} >{label}</ThemedText>
+          <ThemedText
+            style={[styles.buttonLabel, { color: '#000000' }]}
+          >
+            {label}
+          </ThemedText>
         </Pressable>
       </View>
     );
