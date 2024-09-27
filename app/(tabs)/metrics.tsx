@@ -3,11 +3,12 @@ import { StyleSheet, ScrollView } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import type { Payment, Sell, SellProduct } from '@/hooks/useDb';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { displayBS, displayDS } from '@/utils/utils';
+import { useFocusEffect } from 'expo-router';
 
 type Debth = {
   name: string
@@ -103,10 +104,12 @@ export default function Metrics() {
     setDebth(data);
   }
 
-
-  useEffect(() => {
-    getData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      console.log("get data in metrics")
+      getData();
+    }, [])
+  );
 
   return (
     <SafeAreaView>

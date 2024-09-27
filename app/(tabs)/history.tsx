@@ -3,12 +3,13 @@ import { StyleSheet, ScrollView } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import CheckBox from 'react-native-bouncy-checkbox';
 
 import type { Payment, Sell, SellProduct } from '@/hooks/useDb';
 import { currencyToText, displayCurrency, displayPaymentMethod } from '@/utils/utils';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 
 type AgregatedSell = Sell & {
   products: (SellProduct & { name: string, value: number })[]
@@ -91,9 +92,12 @@ export default function History() {
     setRegisteredPayments(payments);
   }
 
-  useEffect(() => {
-    getData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      console.log("get data in history")
+      getData();
+    }, [])
+  );
 
   return (
     <SafeAreaView>

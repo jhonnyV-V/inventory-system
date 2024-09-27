@@ -5,9 +5,10 @@ import { ThemedView } from '@/components/ThemedView';
 import { ThemedTextInput } from '@/components/ThemedTextInput';
 import Button from '@/components/Button';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import type { Customer } from '@/hooks/useDb';
+import { useFocusEffect } from 'expo-router';
 
 function Customer({ customer }: { customer: Customer }) {
   return (
@@ -28,9 +29,12 @@ export default function Customers() {
     setCustomers(data.slice(1));
   }
 
-  useEffect(() => {
-    getData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      console.log("get data in customers")
+      getData();
+    }, [])
+  );
 
   return (
     <ThemedView style={styles.container}>

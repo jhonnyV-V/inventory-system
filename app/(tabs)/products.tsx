@@ -5,9 +5,10 @@ import { ThemedView } from '@/components/ThemedView';
 import { ThemedTextInput } from '@/components/ThemedTextInput';
 import Button from '@/components/Button';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import type { Product } from '@/hooks/useDb';
+import { useFocusEffect } from 'expo-router';
 
 //TODO: add a way to edit the number of stock and maybe price
 function Product({ product }: { product: Product }) {
@@ -33,9 +34,12 @@ export default function Products() {
     setProducts(data);
   }
 
-  useEffect(() => {
-    getData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      console.log("get data in products")
+      getData();
+    }, [])
+  );
 
   return (
     <ThemedView style={styles.container}>

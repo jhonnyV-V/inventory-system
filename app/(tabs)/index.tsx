@@ -1,7 +1,7 @@
 import { StyleSheet } from 'react-native';
 
 import { useSQLiteContext } from 'expo-sqlite';
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import CheckBox from 'react-native-bouncy-checkbox';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -11,6 +11,7 @@ import Button from '@/components/Button';
 
 import type { Customer, Payment, Product, Sell, SellProduct } from '@/hooks/useDb';
 import { Collapsible } from '@/components/Collapsible';
+import { useFocusEffect } from 'expo-router';
 
 
 type modalType = 'sell' | 'payment' | 'none'
@@ -127,21 +128,26 @@ function Sell({ setModal }: Props) {
   const [pmTransfer, setPmTransfer] = useState(true);
   const [amount, setAmount] = useState('0');
 
-  useEffect(() => {
-    async function getCustomers() {
-      const data: Customer[] = await db.getAllAsync('SELECT * FROM customers');
-      setCustomers(data);
-    }
-    getCustomers();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      async function getCustomers() {
+        const data: Customer[] = await db.getAllAsync('SELECT * FROM customers');
+        setCustomers(data);
+      }
+      getCustomers();
+    }, [])
+  );
 
-  useEffect(() => {
-    async function getProducts() {
-      const data: Product[] = await db.getAllAsync('SELECT * FROM products');
-      setProducts(data);
-    }
-    getProducts();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      async function getProducts() {
+        const data: Product[] = await db.getAllAsync('SELECT * FROM products');
+        setProducts(data);
+      }
+      console.log("get products in index")
+      getProducts();
+    }, [])
+  );
 
   return (
     <>
@@ -267,11 +273,19 @@ function Sell({ setModal }: Props) {
             let amountpaid = Number(amount);
             if (amountpaid > 0) {
               if (cUsd) {
-                amountpaid = amountpaid * 1000;
+                amountpaid = Math.floor(amountpaid * 1000);
               } else {
-                amountpaid = Math.floor(amountpaid / 37);
-                amountpaid = amountpaid * 1000;
+                amountpaid = Math.floor((amountpaid / 37) * 1000);
               }
+            }
+
+            console.log("selected Products", selectedProducts);
+            console.log("selected Products is empty", selectedProducts.length === 0);
+
+            if (selectedProducts.length === 0) {
+              console.log("select product is in fact empty")
+              alert("Necesitas selecionar al menos un producto");
+              return
             }
 
             const SellExample: Sell = {
@@ -352,13 +366,16 @@ function Payment({ setModal }: Props) {
   const [pmTransfer, setPmTransfer] = useState(true);
   const [amount, setAmount] = useState('0');
 
-  useEffect(() => {
-    async function getCustomers() {
-      const data: Customer[] = await db.getAllAsync('SELECT * FROM customers');
-      setCustomers(data);
-    }
-    getCustomers()
-  }, [])
+  useFocusEffect(
+    useCallback(() => {
+      async function getCustomers() {
+        const data: Customer[] = await db.getAllAsync('SELECT * FROM customers');
+        setCustomers(data);
+      }
+      getCustomers()
+      console.log("get customers in index")
+    }, [])
+  );
 
   return (
     <>
@@ -448,7 +465,6 @@ function Payment({ setModal }: Props) {
               Transferencia
             </ThemedText>
           </ThemedView >
-
         </ThemedView >
       )}
 
@@ -474,11 +490,18 @@ function Payment({ setModal }: Props) {
             let amountpaid = Number(amount);
             if (amountpaid > 0) {
               if (cUsd) {
-                amountpaid = amountpaid * 1000;
+                amountpaid = Math.floor(amountpaid * 1000);
               } else {
-                amountpaid = Math.floor(amountpaid / 37);
-                amountpaid = amountpaid * 1000;
+                amountpaid = Math.floor((amountpaid / 37) * 1000);
               }
+            } else {
+              alert("Monto pagado debe ser mayor a 0");
+              return
+            }
+
+            if (!selectedCustomer?.id) {
+              alert("Necesita seleccionar un cliente");
+              return
             }
 
             const example: Payment = {
