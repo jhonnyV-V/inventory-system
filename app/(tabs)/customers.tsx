@@ -1,7 +1,8 @@
-import { StyleSheet, TextInput } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { ThemedTextInput } from '@/components/ThemedTextInput';
 import Button from '@/components/Button';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
@@ -44,7 +45,7 @@ export default function Customers() {
       ))}
       {showModal ? (
         <ThemedView style={{ marginTop: 10 }}>
-          <TextInput
+          <ThemedTextInput
             style={styles.input}
             onChangeText={setName}
             value={name}

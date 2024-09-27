@@ -1,4 +1,4 @@
-import { StyleSheet, TextInput } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
@@ -6,6 +6,7 @@ import CheckBox from 'react-native-bouncy-checkbox';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { ThemedTextInput } from '@/components/ThemedTextInput';
 import Button from '@/components/Button';
 
 import type { Customer, Payment, Product, Sell, SellProduct } from '@/hooks/useDb';
@@ -94,7 +95,7 @@ function Product({ product, isSelected, select, productToQuantity }: ProductProp
         )}
       </ThemedView>
       {isSelected && (
-        <TextInput
+        <ThemedTextInput
           style={styles.input}
           onChangeText={(v) => {
             if (Number(v) > 0) {
@@ -249,7 +250,7 @@ function Sell({ setModal }: Props) {
         <ThemedText type='subtitle'>
           Monto Pagado (opcional)
         </ThemedText>
-        <TextInput
+        <ThemedTextInput
           style={styles.input}
           value={amount}
           onChangeText={(v) => setAmount(v)}
@@ -455,7 +456,7 @@ function Payment({ setModal }: Props) {
         <ThemedText type='subtitle'>
           Monto Pagado
         </ThemedText>
-        <TextInput
+        <ThemedTextInput
           style={styles.input}
           value={amount}
           onChangeText={(v) => setAmount(v)}
