@@ -25,8 +25,8 @@ function Customer({ customer }: { customer: Debth }) {
       <ThemedText type='defaultSemiBold'>
         {customer.debth > 0 ? `le debes ${customer.name}` : `${customer.name} te debe`}
       </ThemedText>
-      <ThemedText>en bolivares {displayBS(customer.debth)} bs</ThemedText>
-      <ThemedText>en dolares {displayDS(customer.debth)} bs</ThemedText>
+      <ThemedText>en bolivares {Math.round(displayBS(customer.debth))} bs</ThemedText>
+      <ThemedText>en dolares {Math.round(displayDS(customer.debth) * 100) / 100} $</ThemedText>
     </ThemedView>
   );
 }

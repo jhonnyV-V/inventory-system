@@ -6,7 +6,7 @@ export function displayCurrency(value: number, currency: 'bolivares' | 'dolars')
 }
 
 export function displayBS(value: number) {
-  return Math.ceil(value / 1000 * 37);
+  return Math.round(value / 1000 * 37);
 }
 
 export function displayDS(value: number) {

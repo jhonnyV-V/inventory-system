@@ -31,7 +31,14 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Suspense>
-        <SQLiteProvider databaseName='db.db' onInit={migrate} options={{ useNewConnection: true }}>
+        <SQLiteProvider
+          databaseName='db.db'
+          onInit={migrate}
+          options={{
+            useNewConnection: true,
+            //enableChangeListener: true,
+          }}
+        >
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="+not-found" />
